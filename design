@@ -12,37 +12,50 @@ RubyReportable.define :test do
   end
 
   filter('Program') do
+    require
     key :program
     on :data
-    input :required
+    input(:select) { Program.all.map(&:to_s) }
 
-    operand { client_application.program.to_s }
-    collection { Program.all.map(&:to_s) }
+    logic do
+      client_application.program.to_s == input
+    end
   end
 end
 
 
 class Sandbox
-  def initialize(meta, source)
-    @meta = meta
-    @source = source
+  def initialize(methods)
+    @values = {}
+
+    methods.map do |key, value|
+      define(key, value)
+    end
   end
 
-  def build(block)
-    @source = instance_eval(&block)
+  def build(base, block)
+    @values[base] = instance_eval(&block)
     self
   end
 
-
-  #
-  # methods used by filters
-  #
-  def meta
-    @meta
+  def [](key)
+    @values[key]
   end
 
-  def source
-    @source
+  def []=(key, value)
+    if value.is_a?(Proc)
+      @values[key] ||= value.call
+    else
+      @values[key] ||= value
+    end
+  end
+
+  def define(key, value)
+    self.class.class_eval do
+      define_method(key) do
+        self[key] = value
+      end
+    end
   end
 end
 
