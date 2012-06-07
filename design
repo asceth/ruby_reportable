@@ -1,0 +1,49 @@
+RubyReportable.define :test do
+  source :as => :client_application do
+    ClientApplication.joins(:assigned_worker, :client)
+  end
+
+  output('CLTC #')  { client_application.client.cltc_number }
+  output('Program') { client_application.program.to_s }
+  output('Worker')  { client_application.assigned_worker.to_s }
+
+  filter('Worker', :as => :worker, :on => :source, :unless => { meta[:current_user].roles.include?(:all) }) do
+    source.where('client_applications.assigned_worker_id' => meta[:current_user].id)
+  end
+
+  filter('Program') do
+    key :program
+    on :data
+    input :required
+
+    operand { client_application.program.to_s }
+    collection { Program.all.map(&:to_s) }
+  end
+end
+
+
+class Sandbox
+  def initialize(meta, source)
+    @meta = meta
+    @source = source
+  end
+
+  def build(block)
+    @source = instance_eval(&block)
+    self
+  end
+
+
+  #
+  # methods used by filters
+  #
+  def meta
+    @meta
+  end
+
+  def source
+    @source
+  end
+end
+
+RubyReportable.reports[:test].run(:meta => {:current_user => nil}, :input => {:program => 'Community Choices'})
