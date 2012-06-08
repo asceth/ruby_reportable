@@ -1,27 +1,40 @@
-RubyReportable.define :test do
+RubyReportable.define :case_management_roster do
   source :as => :client_application do
     ClientApplication.joins(:assigned_worker, :client)
   end
 
-  output('CLTC #')  { client_application.client.cltc_number }
-  output('Program') { client_application.program.to_s }
-  output('Worker')  { client_application.assigned_worker.to_s }
+  output('CLTC #')         { client_application.client.cltc_number }
+  output('Program')        { client_application.program.to_s }
+  output('Worker')         { client_application.assigned_worker.to_s }
+  output('Level of Care')  { client_application.latest_assessment.care_level.to_s }
 
-  filter('Worker', :as => :worker, :on => :source, :unless => { meta[:current_user].roles.include?(:all) }) do
-    source.where('client_applications.assigned_worker_id' => meta[:current_user].id)
+  filter('Worker') do
+    key :worker
+    on :source
+
+    require do
+      meta[:current_user].roles.include?(:all)
+    end
+
+    logic do
+      source.where('client_applications.assigned_worker_id' => meta[:current_user].id)
+    end
   end
 
   filter('Program') do
     require
     key :program
     on :data
-    input(:select) { Program.all.map(&:to_s) }
+    input(:multiple) { Program.all.map(&:to_s) }
 
     logic do
       client_application.program.to_s == input
     end
   end
 end
+
+
+
 
 
 class Sandbox
