@@ -1,10 +1,16 @@
 module RubyReportable
   module Report
-    attr_accessor :name, :data_source, :meta, :outputs, :filters
+    attr_accessor :report_name, :data_source, :outputs, :filters
 
-    def name(string)
-      @name = string
-      RubyReportable.add(name, self)
+    def clear
+      @outputs = {}
+      @filters = {}
+      @data_source = nil
+    end
+
+    def report(string)
+      @report_name = string
+      RubyReportable.add(@report_name, self)
     end
 
     def source(&block)
@@ -26,7 +32,7 @@ module RubyReportable
       source_sandbox = RubyReportable::Sandbox.new(:meta => options[:meta], :source => @data_source[:logic])
 
       @data_source[:filters].inject(source_sandbox) do |sandbox, filter|
-        unless sandbox.instance_eval(&filter[:unless])
+        unless filter[:unless] && sandbox.instance_eval(&filter[:unless])
           sandbox.build(:source, filter[:logic])
         else
           sandbox
@@ -34,38 +40,33 @@ module RubyReportable
       end
     end
 
-    def _data(source_sandbox, options = {})
-      # build sandbox for testing data against filters
-      data_sandbox = RubyReportable::Sandbox.new(:meta => options[:meta], @data_source[:as] => nil, :input => nil)
+    def _data(_source_sandbox, options = {})
+      # add input to source sandbox
+      _source_sandbox.define(:input, nil)
 
-      @filters.inject(source_sandbox.source) do |data, filter|
+      @filters.inject(_source_sandbox) do |sandbox, (filter_name, filter)|
         # find input for given filter
-        data_sandbox[:input] = options[:input][filter.key]
+        sandbox[:input] = options[:input][filter[:key]] if options[:input].is_a?(Hash)
 
-        if filter.valid?
-          data.select do |element|
-            # set sandbox up for filter
-            data_sandbox[@data_source[:as]] = element
-
-            data_sandbox.instance_eval(filter.logic)
-          end
+        if filter[:valid].nil? || sandbox.instance_eval(&filter[:valid])
+          sandbox.build(:source, filter[:logic])
         else
-          data
+          sandbox
         end
-      end
+      end.source
     end
 
     def _output(data, options = {})
       # build sandbox for building outputs
-      output_sandbox = RubyReportable::Sandbox.new(:meta => options[:meta], @data_source[:as] => nil)
+      sandbox = RubyReportable::Sandbox.new(:meta => options[:meta], @data_source[:as] => nil)
 
       data.inject([]) do |rows, element|
         # fill sandbox with data element
-        output_sandbox[@data_source[:as]] = element
+        sandbox[@data_source[:as]] = element
 
         # grab outputs
         rows << @outputs.inject({}) do |row, (output_name, output_logic)|
-          row[output_name] = output_sandbox.instance_eval(&output_logic)
+          row[output_name] = sandbox.instance_eval(&output_logic)
           row
         end
       end

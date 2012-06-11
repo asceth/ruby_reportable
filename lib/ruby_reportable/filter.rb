@@ -2,6 +2,7 @@ module RubyReportable
   class Filter
     def initialize(name)
       @options = {}
+      self[:key] = name.to_s.downcase
       self[:name] = name
     end
 
@@ -28,6 +29,10 @@ module RubyReportable
     def input(type, &block)
       self[:input] = type
       self[:collection] = block
+    end
+
+    def valid?(&block)
+      self[:valid] = block
     end
 
     def logic(&block)

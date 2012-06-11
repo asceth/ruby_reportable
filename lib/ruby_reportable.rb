@@ -1,11 +1,17 @@
-base = Dir.pwd
+unless Kernel.respond_to?(:require_relative)
+  module Kernel
+    def require_relative(path)
+      require File.join(File.dirname(caller[0]), path.to_str)
+    end
+  end
+end
 
-require base + '/ruby_reportable/base'
-require base + '/ruby_reportable/filter'
-require base + '/ruby_reportable/sandbox'
-require base + '/ruby_reportable/source'
+require_relative 'ruby_reportable/base'
+require_relative 'ruby_reportable/filter'
+require_relative 'ruby_reportable/sandbox'
+require_relative 'ruby_reportable/source'
 
-require base + '/ruby_reportable/report'
+require_relative 'ruby_reportable/report'
 
 
 

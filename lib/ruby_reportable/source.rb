@@ -1,7 +1,7 @@
 module RubyReportable
   class Source
     def initialize
-      @options = {:filters => [], :as => :source_item}
+      @options = {:filters => [], :as => :element}
     end
 
     def [](key)
@@ -20,7 +20,7 @@ module RubyReportable
       self[:logic] = block
     end
 
-    def filter(options, &block)
+    def filter(options = {}, &block)
       self[:filters] << options.merge(:logic => block)
     end
   end

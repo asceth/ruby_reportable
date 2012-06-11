@@ -1,6 +1,8 @@
 class ObjectSpaceReport
   include RubyReportable
 
+  name 'Object Space By Class'
+
   source do
     as :object
 
