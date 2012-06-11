@@ -6,6 +6,10 @@ module RubyReportable
     @@reports[name].instance_eval(&block)
   end
 
+  def [](name)
+    @@reports[name]
+  end
+
   def self.reports
     @@reports
   end
