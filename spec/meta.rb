@@ -1,4 +1,6 @@
-RubyReportable.define :meta do
+class ObjectSpaceReport
+  include RubyReportable
+
   source do
     as :object
 
@@ -9,5 +11,4 @@ RubyReportable.define :meta do
 
   output('Class') { object.first.to_s }
   output('Total') { object.last.size }
-
 end

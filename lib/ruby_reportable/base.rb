@@ -1,9 +1,17 @@
 module RubyReportable
   @@reports = {}
 
-  def self.define(name, &block)
-    @@reports[name] = RubyReportable::Report.new(name)
-    @@reports[name].instance_eval(&block)
+  def self.included(base)
+    base.class_eval do
+      @outputs = {}
+      @filters = {}
+    end
+
+    base.send :extend, RubyReportable::Report
+  end
+
+  def self.add(name, klass)
+    @@reports[name] = klass
   end
 
   def [](name)

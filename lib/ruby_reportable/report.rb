@@ -1,11 +1,10 @@
 module RubyReportable
-  class Report
+  module Report
     attr_accessor :name, :data_source, :meta, :outputs, :filters
 
-    def initialize(name)
-      @name = name
-      @outputs = {}
-      @filters = {}
+    def name(string)
+      @name = string
+      RubyReportable.add(name, self)
     end
 
     def source(&block)
