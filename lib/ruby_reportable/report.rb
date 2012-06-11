@@ -39,7 +39,7 @@ module RubyReportable
       # build sandbox for testing data against filters
       data_sandbox = RubyReportable::Sandbox.new(:meta => options[:meta], @data_source[:as] => nil, :input => nil)
 
-      @filters.inject(source_sandbox[:source]) do |data, filter|
+      @filters.inject(source_sandbox.source) do |data, filter|
         # find input for given filter
         data_sandbox[:input] = options[:input][filter.key]
 
@@ -65,8 +65,9 @@ module RubyReportable
         output_sandbox[@data_source[:as]] = element
 
         # grab outputs
-        rows << @outputs.inject({}) do |row, output_name, output_logic|
+        rows << @outputs.inject({}) do |row, (output_name, output_logic)|
           row[output_name] = output_sandbox.instance_eval(&output_logic)
+          row
         end
       end
     end

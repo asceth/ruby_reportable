@@ -1,7 +1,7 @@
 module RubyReportable
   class Source
     def initialize
-      @options = {:filters => []}
+      @options = {:filters => [], :as => :source_item}
     end
 
     def [](key)
