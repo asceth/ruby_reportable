@@ -1,20 +1,24 @@
 RubyReportable.define :test do
-  source :as => :client_application do
-    ClientApplication.joins(:assigned_worker, :client)
+  source do
+    as :client_application
+
+    logic do
+      ClientApplication.joins(:assigned_worker, :client)
+    end
+
+    filter(:unless => proc { meta[:current_user].roles.include?(:all) }) do
+      source.where('client_applications.assigned_worker_id' => meta[:current_user].id)
+    end
   end
 
   output('CLTC #')  { client_application.client.cltc_number }
   output('Program') { client_application.program.to_s }
   output('Worker')  { client_application.assigned_worker.to_s }
 
-  filter('Worker', :as => :worker, :on => :source, :unless => { meta[:current_user].roles.include?(:all) }) do
-    source.where('client_applications.assigned_worker_id' => meta[:current_user].id)
-  end
 
   filter('Program') do
     require
     key :program
-    on :data
     input(:select) { Program.all.map(&:to_s) }
 
     logic do
@@ -24,39 +28,6 @@ RubyReportable.define :test do
 end
 
 
-class Sandbox
-  def initialize(methods)
-    @values = {}
 
-    methods.map do |key, value|
-      define(key, value)
-    end
-  end
-
-  def build(base, block)
-    @values[base] = instance_eval(&block)
-    self
-  end
-
-  def [](key)
-    @values[key]
-  end
-
-  def []=(key, value)
-    if value.is_a?(Proc)
-      @values[key] ||= value.call
-    else
-      @values[key] ||= value
-    end
-  end
-
-  def define(key, value)
-    self.class.class_eval do
-      define_method(key) do
-        self[key] = value
-      end
-    end
-  end
-end
 
 RubyReportable.reports[:test].run(:meta => {:current_user => nil}, :input => {:program => 'Community Choices'})
