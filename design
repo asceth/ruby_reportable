@@ -11,22 +11,23 @@ RubyReportable.define :test do
     end
   end
 
-  output('CLTC #')  { client_application.client.cltc_number }
-  output('Program') { client_application.program.to_s }
-  output('Worker')  { client_application.assigned_worker.to_s }
+  output('CLTC #')         { client_application.client.cltc_number }
+  output('Program')        { client_application.program.to_s }
+  output('Worker')         { client_application.assigned_worker.to_s }
+  output('Level of Care')  { client_application.latest_assessment.care_level.to_s }
 
 
   filter('Program') do
     require
     key :program
-    input(:select) { Program.all.map(&:to_s) }
+    on :data
+    input(:multiple) { Program.all.map(&:to_s) }
 
     logic do
       client_application.program.to_s == input
     end
   end
 end
-
 
 
 
