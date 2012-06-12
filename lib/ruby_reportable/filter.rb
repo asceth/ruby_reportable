@@ -2,8 +2,8 @@ module RubyReportable
   class Filter
     def initialize(name)
       @options = {}
-      self[:key] = name.to_s.downcase
-      self[:name] = name
+      @options[:key] = name.to_s.downcase.gsub(' ', '_').gsub(/[^a-zA-Z_]+/, '')
+      @options[:name] = name
     end
 
     def [](key)
@@ -22,8 +22,16 @@ module RubyReportable
       end
     end
 
+    def priority(value)
+      self[:priority] = value
+    end
+
     def key(key)
       self[:key] = key
+    end
+
+    def use?(&block)
+      self[:use] = block
     end
 
     def input(type, &block)

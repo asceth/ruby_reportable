@@ -16,15 +16,5 @@ describe RubyReportable::Source do
       @source[:as].should == :element
       @source[:logic].call.should == Object.methods.sort
     end
-
-    it "should accumulate filters" do
-      @source[:filters].size.should == 0
-
-      @source.filter do
-        element.include?('z')
-      end
-
-      @source[:filters].size.should == 1
-    end
   end
 end

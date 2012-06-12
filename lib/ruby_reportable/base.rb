@@ -2,20 +2,10 @@ module RubyReportable
   @@reports = {}
 
   def self.included(base)
-    base.class_eval do
-      @outputs = {}
-      @filters = {}
-    end
-
     base.send :extend, RubyReportable::Report
-  end
+    base.clear
 
-  def self.add(name, klass)
-    @@reports[name] = klass
-  end
-
-  def [](name)
-    @@reports[name]
+    @@reports[base.to_s] = base
   end
 
   def self.reports

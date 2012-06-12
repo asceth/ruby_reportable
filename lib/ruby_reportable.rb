@@ -8,8 +8,10 @@ end
 
 require_relative 'ruby_reportable/base'
 require_relative 'ruby_reportable/filter'
+require_relative 'ruby_reportable/output'
 require_relative 'ruby_reportable/sandbox'
 require_relative 'ruby_reportable/source'
+
 
 require_relative 'ruby_reportable/report'
 

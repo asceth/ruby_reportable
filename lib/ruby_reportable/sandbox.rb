@@ -3,6 +3,7 @@ module RubyReportable
     def metaclass
       class << self; self; end
     end
+
     def initialize(_methods = {})
       @values = {}
 

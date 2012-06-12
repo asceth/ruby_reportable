@@ -19,9 +19,5 @@ module RubyReportable
     def logic(&block)
       self[:logic] = block
     end
-
-    def filter(options = {}, &block)
-      self[:filters] << options.merge(:logic => block)
-    end
   end
 end
