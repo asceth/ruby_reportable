@@ -4,6 +4,7 @@ module RubyReportable
       @options = {}
       @options[:key] = name.to_s.downcase.gsub(' ', '_').gsub(/[^a-zA-Z_]+/, '')
       @options[:name] = name
+      @options[:require] = false
     end
 
     def [](key)
@@ -14,12 +15,8 @@ module RubyReportable
       @options[key] = value
     end
 
-    def require(&block)
-      if block_given?
-        self[:require] = block
-      else
-        self[:require] = true
-      end
+    def require
+      self[:require] = true
     end
 
     def priority(value)
