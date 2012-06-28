@@ -152,7 +152,7 @@ module RubyReportable
       grouped = _group(options[:group], data, options)
 
       # sort grouped data
-      _sort(options[:sort], data, options)
+      _sort(options[:sort], grouped, options)
     end # end def run
 
     def valid?(options = {})
