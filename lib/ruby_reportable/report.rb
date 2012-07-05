@@ -10,6 +10,18 @@ module RubyReportable
       @category = 'Reports'
     end
 
+    def meta(key, value = nil, &block)
+      if block_given?
+        @meta[key] = block
+      else
+        if value.nil?
+          @meta[key]
+        else
+          @meta[key] = value
+        end
+      end
+    end
+
     def report(string = nil)
       if string.nil?
         @report
@@ -75,7 +87,7 @@ module RubyReportable
 
     def _source(options = {})
       # build sandbox for getting the data
-      RubyReportable::Sandbox.new(:meta => options[:meta], :source => @data_source[:logic], :input => nil)
+      RubyReportable::Sandbox.new(:meta => @meta, :source => @data_source[:logic], :inputs => options[:input] || {}, :input => nil)
     end
 
     def _data(sandbox, options = {})
@@ -86,14 +98,14 @@ module RubyReportable
       if @finalize.nil?
         sandbox
       else
-        sandbox[:input] = options[:input] || {}
+        sandbox[:inputs] = options[:input] || {}
         sandbox.build(:source, @finalize)
       end
     end
 
     def _output(source_data, options = {})
       # build sandbox for building outputs
-      sandbox = RubyReportable::Sandbox.new(:meta => options[:meta], @data_source[:as] => nil)
+      sandbox = RubyReportable::Sandbox.new(:meta => @meta, @data_source[:as] => nil)
 
       source_data.inject({:results => []}) do |rows, element|
         # fill sandbox with data element
@@ -134,7 +146,7 @@ module RubyReportable
     end
 
     def run(options = {})
-      options = {:meta => {}, :input => {}}.merge(options)
+      options = {:input => {}}.merge(options)
 
       # initial sandbox
       sandbox = _source(options)
@@ -156,7 +168,7 @@ module RubyReportable
     end # end def run
 
     def valid?(options = {})
-      options = {:meta => {}, :input => {}}.merge(options)
+      options = {:input => {}}.merge(options)
       sandbox = _source(options)
 
       validity = @filters.map do |filter_name, filter|
