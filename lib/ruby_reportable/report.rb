@@ -8,6 +8,7 @@ module RubyReportable
       @data_source = nil
       @report = self.to_s
       @category = 'Reports'
+      @meta = {}
     end
 
     def meta(key, value = nil, &block)
@@ -52,8 +53,8 @@ module RubyReportable
       @finalize = block
     end
 
-    def output(name, &block)
-      @outputs << RubyReportable::Output.new(name, block)
+    def output(name, options = {}, &block)
+      @outputs << RubyReportable::Output.new(name, options, block)
     end
 
 
@@ -61,7 +62,7 @@ module RubyReportable
     # methods you shouldn't use inside the blocks
     #
     def useable_filters(scope)
-      @filters.values.select {|filter| !filter[:input].nil? && (filter[:use].nil? || filter[:use].call(scope))}
+      @filters.values.select {|filter| !filter[:input].nil? && (filter[:use].nil? || filter[:use].call(scope))}.sort_by {|filter| filter[:priority].to_i}
     end
 
     def _filter(filters, original_sandbox, options)
@@ -169,7 +170,12 @@ module RubyReportable
 
     def valid?(options = {})
       options = {:input => {}}.merge(options)
+
+      # initial sandbox
       sandbox = _source(options)
+
+      # add in inputs
+      sandbox[:inputs] = options[:input]
 
       validity = @filters.map do |filter_name, filter|
         # find input for given filter
