@@ -8,6 +8,19 @@ module RubyReportable
       @data_source = nil
       @report = self.to_s
       @category = 'Reports'
+      @meta = {}
+    end
+
+    def meta(key, value = nil, &block)
+      if block_given?
+        @meta[key] = block
+      else
+        if value.nil?
+          @meta[key]
+        else
+          @meta[key] = value
+        end
+      end
     end
 
     def report(string = nil)
@@ -40,8 +53,8 @@ module RubyReportable
       @finalize = block
     end
 
-    def output(name, &block)
-      @outputs << RubyReportable::Output.new(name, block)
+    def output(name, options = {}, &block)
+      @outputs << RubyReportable::Output.new(name, options, block)
     end
 
 
@@ -49,7 +62,7 @@ module RubyReportable
     # methods you shouldn't use inside the blocks
     #
     def useable_filters(scope)
-      @filters.values.select {|filter| !filter[:input].nil? && (filter[:use].nil? || filter[:use].call(scope))}
+      @filters.values.select {|filter| !filter[:input].nil? && (filter[:use].nil? || filter[:use].call(scope))}.sort_by {|filter| filter[:priority].to_i}
     end
 
     def _filter(filters, original_sandbox, options)
@@ -62,7 +75,11 @@ module RubyReportable
         sandbox[:input] = options[:input][filter[:key]] if options[:input].is_a?(Hash)
 
         if filter[:valid].nil? || sandbox.instance_eval(&filter[:valid])
-          sandbox.build(:source, filter[:logic])
+          if filter[:logic].nil?
+            sandbox
+          else
+            sandbox.build(:source, filter[:logic])
+          end
         else
           sandbox
         end
@@ -71,7 +88,7 @@ module RubyReportable
 
     def _source(options = {})
       # build sandbox for getting the data
-      RubyReportable::Sandbox.new(:meta => options[:meta], :source => @data_source[:logic], :input => nil)
+      RubyReportable::Sandbox.new(:meta => @meta, :source => @data_source[:logic], :inputs => options[:input] || {}, :input => nil)
     end
 
     def _data(sandbox, options = {})
@@ -82,13 +99,14 @@ module RubyReportable
       if @finalize.nil?
         sandbox
       else
+        sandbox[:inputs] = options[:input] || {}
         sandbox.build(:source, @finalize)
       end
     end
 
     def _output(source_data, options = {})
       # build sandbox for building outputs
-      sandbox = RubyReportable::Sandbox.new(:meta => options[:meta], @data_source[:as] => nil)
+      sandbox = RubyReportable::Sandbox.new(:meta => @meta, @data_source[:as] => nil)
 
       source_data.inject({:results => []}) do |rows, element|
         # fill sandbox with data element
@@ -129,7 +147,7 @@ module RubyReportable
     end
 
     def run(options = {})
-      options = {:meta => {}, :input => {}}.merge(options)
+      options = {:input => {}}.merge(options)
 
       # initial sandbox
       sandbox = _source(options)
@@ -149,5 +167,36 @@ module RubyReportable
       # sort grouped data
       _sort(options[:sort], grouped, options)
     end # end def run
+
+    def valid?(options = {})
+      options = {:input => {}}.merge(options)
+
+      # initial sandbox
+      sandbox = _source(options)
+
+      # add in inputs
+      sandbox[:inputs] = options[:input]
+
+      validity = @filters.map do |filter_name, filter|
+        # find input for given filter
+        sandbox[:input] = options[:input][filter[:key]] if options[:input].is_a?(Hash)
+
+        filter_validity = filter[:valid].nil? || sandbox.instance_eval(&filter[:valid])
+
+        if filter_validity == false
+          # filter failed validity test, if it's a required filter
+          # we return false, otherwise its optional so return true
+          if filter[:require]
+            false
+          else
+            true
+          end
+        else
+          true
+        end
+      end
+
+      !validity.include?(false)
+    end # end def valid?
   end
 end
