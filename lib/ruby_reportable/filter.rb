@@ -4,6 +4,7 @@ module RubyReportable
       @options = {}
       @options[:key] = name.to_s.downcase.gsub(' ', '_').gsub(/[^a-zA-Z_]+/, '')
       @options[:name] = name
+      @options[:default] = nil
     end
 
     def [](key)
@@ -45,6 +46,10 @@ module RubyReportable
 
     def logic(&block)
       self[:logic] = block
+    end
+
+    def default(&block)
+      self[:default] = block
     end
   end
 end
