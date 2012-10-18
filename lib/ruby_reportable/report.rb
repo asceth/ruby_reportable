@@ -54,7 +54,7 @@ module RubyReportable
     end
 
     def output(name, options = {}, &block)
-      @outputs << RubyReportable::Output.new(name, options, block)
+      @outputs << RubyReportable::Output.new(name, options, block) if options[:hidden].nil? || options[:hidden] == false
     end
 
 
