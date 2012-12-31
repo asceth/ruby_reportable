@@ -186,11 +186,12 @@ module RubyReportable
         if filter_validity == false
           # filter failed validity test, if it's a required filter
           # we return false, otherwise its optional so return true
-          if filter[:require]
-            false
-          else
-            true
-          end
+          #if filter[:require]
+          #  false
+          #else
+          #  true
+          #end
+          false
         else
           true
         end
