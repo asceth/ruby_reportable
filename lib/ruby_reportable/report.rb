@@ -184,14 +184,12 @@ module RubyReportable
         filter_validity = filter[:valid].nil? || sandbox.instance_eval(&filter[:valid])
 
         if filter_validity == false
-          # filter failed validity test, if it's a required filter
-          # we return false, otherwise its optional so return true
-          #if filter[:require]
-          #  false
-          #else
-          #  true
-          #end
-          false
+          # Ignore an empty filter unless it's required
+          if !sandbox[:input].blank?
+            false
+          else
+            true
+          end
         else
           true
         end
