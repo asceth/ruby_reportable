@@ -42,6 +42,12 @@ Install as a gem or use as part of your Gemfile
 
     $ [sudo] gem install ruby_reportable
 
+## Configuration
 
+### Version 0.2.X
 
+	There is a change in what is returned when a report is validated (object.report.valid?). In 0.1.X true/false is returned but in 0.2.X a hash is returned containing whether the report is valid (status) and an array of errors if any (errors).
+
+```{:status => true/false, :errors => array }
+```
 
