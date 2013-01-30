@@ -170,6 +170,7 @@ module RubyReportable
 
     def valid?(options = {})
       options = {:input => {}}.merge(options)
+      errors = []
 
       # initial sandbox
       sandbox = _source(options)
@@ -178,6 +179,7 @@ module RubyReportable
       sandbox[:inputs] = options[:input]
 
       validity = @filters.map do |filter_name, filter|
+
         # find input for given filter
         sandbox[:input] = options[:input][filter[:key]] if options[:input].is_a?(Hash)
 
@@ -185,17 +187,42 @@ module RubyReportable
 
         if filter_validity == false
           # Ignore an empty filter unless it's required
-          if !sandbox[:input].blank?
+          if !sandbox[:input].to_s.blank?
+            errors << "#{filter_name} is invalid."
+            false
+          else
+            if sandbox[:input].to_s.blank? && !filter[:require].blank?
+              errors << "#{filter_name} is required."
+              false
+            else
+              true
+            end
+          end
+        elsif filter_validity == true
+          if sandbox[:input].to_s.blank? && !filter[:require].blank?
+            errors << "#{filter_name} is required."
             false
           else
             true
           end
-        else
-          true
+        elsif !filter_validity.nil? && !filter_validity[:status].nil? && filter_validity[:status] == false
+          # Ignore an empty filter unless it's required
+          if !sandbox[:input].to_s.blank?
+            errors << filter_validity[:errors]
+            false
+          else
+            if sandbox[:input].to_s.blank? && !filter[:require].blank?
+              errors << "#{filter_name} is required."
+              false
+            else
+              true
+            end
+          end
         end
       end
 
-      !validity.include?(false)
+      return {:status => !validity.include?(false), :errors => errors}
+
     end # end def valid?
   end
 end
