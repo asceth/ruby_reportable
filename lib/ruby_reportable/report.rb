@@ -8,6 +8,8 @@ module RubyReportable
       @data_source = nil
       @report = self.to_s
       @category = 'Reports'
+      @allow_group = true
+      @allow_sort = true
       @meta = {}
     end
 
@@ -28,6 +30,22 @@ module RubyReportable
         @report
       else
         @report = string
+      end
+    end
+
+    def allow_group(string = nil)
+      if string.nil?
+        @allow_group
+      else
+        @allow_group = string
+      end
+    end
+
+    def allow_sort(string = nil)
+      if string.nil?
+        @allow_sort
+      else
+        @allow_sort = string
       end
     end
 
