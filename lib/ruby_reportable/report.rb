@@ -19,7 +19,8 @@ module RubyReportable
     end
 
     def benchmark(name)
-      benchmarks[name] = (Benchmark.realtime { yield if block_given? } * 1000)
+      benchmarks[name] ||= 0.0
+      benchmarks[name] += (Benchmark.realtime { yield if block_given? } * 1000)
     end
 
     def meta(key, value = nil, &block)
