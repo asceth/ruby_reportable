@@ -1,6 +1,6 @@
 module RubyReportable
   module Report
-    attr_accessor :data_source, :outputs, :filters
+    attr_accessor :data_source, :filters
 
     def clear
       @outputs = []
@@ -54,13 +54,21 @@ module RubyReportable
     end
 
     def output(name, options = {}, &block)
-      @outputs << RubyReportable::Output.new(name, options, block) if options[:hidden].nil? || options[:hidden] == false
+      @outputs << RubyReportable::Output.new(name, options, block)
     end
 
 
     #
     # methods you shouldn't use inside the blocks
     #
+    def outputs(hidden = false)
+      if hidden
+        @outputs
+      else
+        @outputs.select {|output| output[:hidden] != true}
+      end
+    end
+
     def useable_filters(scope)
       @filters.values.select {|filter| !filter[:input].nil? && (filter[:use].nil? || filter[:use].call(scope))}.sort_by {|filter| filter[:priority].to_i}
     end
