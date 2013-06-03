@@ -1,3 +1,5 @@
+require 'benchmark'
+
 module RubyReportable
   module Report
     attr_accessor :data_source, :filters
@@ -9,6 +11,16 @@ module RubyReportable
       @report = self.to_s
       @category = 'Reports'
       @meta = {}
+      @benchmarks = {}
+    end
+
+    def benchmarks
+      @benchmarks ||= {}
+    end
+
+    def benchmark(name)
+      benchmarks[name] ||= 0.0
+      benchmarks[name] += (Benchmark.realtime { yield if block_given? } * 1000)
     end
 
     def meta(key, value = nil, &block)
@@ -158,22 +170,34 @@ module RubyReportable
       options = {:input => {}}.merge(options)
 
       # initial sandbox
-      sandbox = _source(options)
+      benchmark(:sandbox) do
+        sandbox = _source(options)
+      end
 
       # apply filters to source
-      filtered_sandbox = _data(sandbox, options)
+      benchmark(:filters) do
+        filtered_sandbox = _data(sandbox, options)
+      end
 
       # finalize raw data from source
-      source_data = _finalize(filtered_sandbox, options).source
+      benchmark(:finalize) do
+        source_data = _finalize(filtered_sandbox, options).source
+      end
 
       # {:default => [{outputs => values}]
-      data = _output(source_data, options)
+      benchmark(:output) do
+        data = _output(source_data, options)
+      end
 
       # transform into {group => [outputs => values]}
-      grouped = _group(options[:group], data, options)
+      benchmark(:group) do
+        grouped = _group(options[:group], data, options)
+      end
 
       # sort grouped data
-      _sort(options[:sort], grouped, options)
+      benchmark(:sort) do
+        _sort(options[:sort], grouped, options)
+      end
     end # end def run
 
     def valid?(options = {})
