@@ -21,7 +21,15 @@ module RubyReportable
 
     def benchmark(name)
       benchmarks[name] ||= 0.0
-      benchmarks[name] += (Benchmark.realtime { yield if block_given? } * 1000)
+
+      @result = nil
+
+      time = Benchmark.realtime do
+        @result = yield
+      end
+
+      benchmarks[name] += time
+      @result
     end
 
     def meta(key, value = nil, &block)
@@ -171,28 +179,28 @@ module RubyReportable
       options = {:input => {}}.merge(options)
 
       # initial sandbox
-      benchmark(:sandbox) do
-        sandbox = _source(options)
+      sandbox = benchmark(:sandbox) do
+        _source(options)
       end
 
       # apply filters to source
-      benchmark(:filters) do
-        filtered_sandbox = _data(sandbox, options)
+      filtered_sandbox = benchmark(:filters) do
+        _data(sandbox, options)
       end
 
       # finalize raw data from source
-      benchmark(:finalize) do
-        source_data = _finalize(filtered_sandbox, options).source
+      source_data = benchmark(:finalize) do
+        _finalize(filtered_sandbox, options).source
       end
 
       # {:default => [{outputs => values}]
-      benchmark(:output) do
-        data = _output(source_data, options)
+      data = benchmark(:output) do
+        _output(source_data, options)
       end
 
       # transform into {group => [outputs => values]}
-      benchmark(:group) do
-        grouped = _group(options[:group], data, options)
+      grouped = benchmark(:group) do
+        _group(options[:group], data, options)
       end
 
       # sort grouped data
