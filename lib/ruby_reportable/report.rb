@@ -14,6 +14,7 @@ module RubyReportable
       @benchmarks = {}
     end
 
+    # :sandbox, :filters, :finalize, :output, :group, :sort
     def benchmarks
       @benchmarks ||= {}
     end
