@@ -135,6 +135,61 @@ describe RubyReportable::Report do
 
       @report._group('letter', @report._output(source_data)).should == {"m" => [{'name' => :method, 'letter' => 'm'}]}
     end
+
+    it "should handle multiple groupings" do
+
+      raw = []
+      raw[0] = ['test1', 29201, 'road']
+      raw[1] = ['test2', 29201, 'road']
+      raw[2] = ['test3', 29201, 'drive']
+      raw[3] = ['test4', 29204, 'road']
+
+      output = []
+      [0, 1, 2, 3].map do |index|
+        output[index] = {
+          'name' => raw[index][0],
+          'zip' => raw[index][1],
+          'path' => raw[index][2]
+        }
+      end
+
+      result = {
+        29201 => {
+          'road' => [output[0], output[1]],
+          'drive' => [output[2]]
+        },
+        29204 => {
+          'road' => [output[3]]
+        }
+      }
+
+      @report.source do
+        logic do
+          [
+           raw[0],
+           raw[1],
+           raw[2],
+           raw[3]
+          ]
+        end
+      end
+
+      @report.output('name') do
+        element[0]
+      end
+
+      @report.output('zip') do
+        element[1]
+      end
+
+      @report.output('path') do
+        element[2]
+      end
+
+      source_data = @report._data(@report._source).source
+
+      @report._group(['zip', 'path'], @report._output(source_data)).should == result
+    end
   end
 
   context "#_sort" do
@@ -152,7 +207,7 @@ describe RubyReportable::Report do
       source_data = @report._data(@report._source).source
       final = @report._sort('name', @report._output(source_data))
 
-      final.should == {:results => Object.methods.sort.map {|method| {'name' => method}}}
+      final.should == Object.methods.sort.map {|method| {'name' => method}}
     end
   end
 end

@@ -137,12 +137,12 @@ module RubyReportable
       # build sandbox for building outputs
       sandbox = RubyReportable::Sandbox.new(:meta => @meta, @data_source[:as] => nil)
 
-      source_data.inject({:results => []}) do |rows, element|
+      source_data.inject([]) do |rows, element|
         # fill sandbox with data element
         sandbox[@data_source[:as]] = element
 
         # grab outputs
-        rows[:results] << @outputs.inject({}) do |row, output|
+        rows << @outputs.inject({}) do |row, output|
           row[output.name] = sandbox.instance_eval(&output.logic)
           row
         end
@@ -151,27 +151,51 @@ module RubyReportable
       end
     end
 
-    def _group(group, data, options = {})
-      unless group.to_s.empty?
-        data[:results].inject({}) do |hash, element|
-          key = element[group]
-          hash[key] ||= []
-          hash[key] << element
-          hash
-        end
-      else
+    def _sort(sort, data, options = {})
+      if sort.to_s.empty?
         data
+      else
+        data.sort_by {|element| element[sort]}
       end
     end
 
-    def _sort(sort, data, options = {})
-      unless sort.to_s.empty?
-        data.inject(Hash.new([])) do |hash, (group, elements)|
-          hash[group] = elements.sort_by {|element| element[sort]}
+    def _group(group, data, options = {})
+      # Run through elements in data which are ordered
+      # from the previous call to #_sort via #run
+      #
+      # Since the elements are already sorted, as we pop
+      # them into their grouping they will remain sorted as
+      # intended
+      #
+      if group.to_s.empty?
+        {:results => data}
+      else
+        group = [group] unless group.is_a?(Array)
+        group.map!(&:to_s)
+
+        # the last group critieria should contain an array
+        # so lets pop it off for special use
+        last_group = group.pop
+
+        data.inject({}) do |hash, element|
+          # grab a local reference to the hash
+          ref = hash
+
+          # run through initial groupings to grab local ref
+          # and default them to {}
+          group.map do |grouping|
+            key = element[grouping]
+            ref[key] ||= {}
+            ref = ref[key]
+          end
+
+          # handle our last grouping
+          key = element[last_group]
+          ref[key] ||= []
+          ref[key] << element
+
           hash
         end
-      else
-        data
       end
     end
 
@@ -198,14 +222,15 @@ module RubyReportable
         _output(source_data, options)
       end
 
-      # transform into {group => [outputs => values]}
-      grouped = benchmark(:group) do
-        _group(options[:group], data, options)
+      # sort the data first cause that makes sense you know
+      sorted = benchmark(:sort) do
+        _sort(options[:sort], data, options)
       end
 
-      # sort grouped data
-      benchmark(:sort) do
-        _sort(options[:sort], grouped, options)
+      # transform into {group => {group => [outputs => values]}}
+      # level of grouping depends on how many groups are passed in
+      benchmark(:group) do
+        _group(options[:group], sorted, options)
       end
     end # end def run
 
