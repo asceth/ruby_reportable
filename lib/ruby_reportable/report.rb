@@ -2,7 +2,7 @@ require 'benchmark'
 
 module RubyReportable
   module Report
-    attr_accessor :data_source, :filters
+    attr_accessor :data_source, :filters, :records_returned
 
     def clear
       @outputs = []
@@ -12,6 +12,7 @@ module RubyReportable
       @category = 'Reports'
       @meta = {}
       @benchmarks = {}
+      @records_returned = 0
     end
 
     # :sandbox, :filters, :finalize, :output, :group, :sort
@@ -221,6 +222,9 @@ module RubyReportable
       data = benchmark(:output) do
         _output(source_data, options)
       end
+
+      # now that we have all of our data go ahead and cache the size
+      records_returned = data.size
 
       # sort the data first cause that makes sense you know
       sorted = benchmark(:sort) do
