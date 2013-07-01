@@ -156,7 +156,9 @@ module RubyReportable
       if sort.to_s.empty?
         data
       else
-        data.sort_by {|element| element[sort]}
+        sort = [sort] unless sort.is_a?(Array)
+
+        data.sort_by {|element| sort.map {|column| element[column]} }
       end
     end
 
