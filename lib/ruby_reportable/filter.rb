@@ -6,6 +6,9 @@ module RubyReportable
       @options[:name] = name
       @options[:default] = nil
       @options[:require] = false
+      @options[:format] = nil
+      @options[:exclude_sort] = false
+      @options[:exclude_group] = false
     end
 
     def [](key)
@@ -18,6 +21,14 @@ module RubyReportable
 
     def require
       self[:require] = true
+    end
+
+    def exclude_sort
+      self[:exclude_sort] = true
+    end
+
+    def exclude_group
+      self[:exclude_group] = true
     end
 
     def priority(value)
@@ -47,6 +58,10 @@ module RubyReportable
 
     def default(&block)
       self[:default] = block
+    end
+
+    def format(&block)
+      self[:format] = block
     end
   end
 end
