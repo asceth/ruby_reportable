@@ -10,6 +10,8 @@ module RubyReportable
       @data_source = nil
       @report = self.to_s
       @category = 'Reports'
+      @allow_group = true
+      @allow_sort = true
       @meta = {}
       @benchmarks = {}
       @records_returned = 0
@@ -50,6 +52,22 @@ module RubyReportable
         @report
       else
         @report = string
+      end
+    end
+
+    def allow_group(string = nil)
+      if string.nil?
+        @allow_group
+      else
+        @allow_group = string
+      end
+    end
+
+    def allow_sort(string = nil)
+      if string.nil?
+        @allow_sort
+      else
+        @allow_sort = string
       end
     end
 
@@ -158,8 +176,14 @@ module RubyReportable
       else
         sort = [sort] unless sort.is_a?(Array)
 
-        data.sort_by {|element| sort.map {|column| element[column]} }
+        #data.sort_by {|element| sort.map {|column| element[column]} }
+        sort.map.each do |element|
+          parts = data.partition { |d| d[element].blank? }
+          sorted = parts.last.sort { |a,b| a[element] <=> b[element] }
+          data = sorted + parts.first
+        end
       end
+      return data
     end
 
     def _group(group, data, options = {})
