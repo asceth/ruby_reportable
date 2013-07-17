@@ -5,6 +5,7 @@ Gem::Specification.new do |s|
   s.name        = "ruby_reportable"
   s.version     = RubyReportable::VERSION
   s.platform    = Gem::Platform::RUBY
+  s.license     = 'MIT'
   s.authors     = ["John 'asceth' Long"]
   s.email       = ["machinist@asceth.com"]
   s.homepage    = "http://github.com/asceth/ruby_reportable"
@@ -21,4 +22,3 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'rr'
 end
-
