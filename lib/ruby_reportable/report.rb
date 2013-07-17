@@ -176,8 +176,14 @@ module RubyReportable
       else
         sort = [sort] unless sort.is_a?(Array)
 
-        data.sort_by {|element| sort.map {|column| element[column]} }
+        #data.sort_by {|element| sort.map {|column| element[column]} }
+        sort.map.each do |element|
+          parts = data.partition { |d| d[element].blank? }
+          sorted = parts.last.sort { |a,b| a[element] <=> b[element] }
+          data = sorted + parts.first
+        end
       end
+      return data
     end
 
     def _group(group, data, options = {})
