@@ -196,7 +196,16 @@ describe RubyReportable::Report do
     it "should sort results" do
       @report.source do
         logic do
-          Object.methods
+          [
+           '!',
+           '==',
+           'const_missing',
+           'try',
+           'to_s',
+           'zebra',
+           'const_get',
+           '_output'
+          ]
         end
       end
 
@@ -207,7 +216,51 @@ describe RubyReportable::Report do
       source_data = @report._data(@report._source).source
       final = @report._sort('name', @report._output(source_data))
 
-      final.should == Object.methods.sort.map {|method| {'name' => method}}
+      final.should == [
+                       '!',
+                       '==',
+                       '_output',
+                       'const_get',
+                       'const_missing',
+                       'to_s',
+                       'try',
+                       'zebra'
+                      ].map {|e| {'name' => e}}
+    end
+
+    it "should handle multiple sorts" do
+      @report.source do
+        logic do
+          [
+           {'country' => 'USA',    'name' => 'Tinker'},
+           {'country' => 'Sweden', 'name' => 'Charmander'},
+           {'country' => 'USA',    'name' => 'Pikachu'},
+           {'country' => 'Norway', 'name' => 'Slink'},
+           {'country' => 'Sweden', 'name' => 'Katarina'},
+           {'country' => nil,      'name' => 'Slyfox'}
+          ]
+        end
+      end
+
+      @report.output('country') do
+        element['country']
+      end
+
+      @report.output('name') do
+        element['name']
+      end
+
+      source_data = @report._data(@report._source).source
+      final = @report._sort(['country', 'name'], @report._output(source_data))
+
+      final.should == [
+                       {'country' => nil,      'name' => 'Slyfox'},
+                       {'country' => 'Norway', 'name' => 'Slink'},
+                       {'country' => 'Sweden', 'name' => 'Charmander'},
+                       {'country' => 'Sweden', 'name' => 'Katarina'},
+                       {'country' => 'USA',    'name' => 'Pikachu'},
+                       {'country' => 'USA',    'name' => 'Tinker'},
+                      ]
     end
   end
 end

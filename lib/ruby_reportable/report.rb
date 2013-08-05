@@ -1,4 +1,5 @@
 require 'benchmark'
+require 'date'
 
 module RubyReportable
   module Report
@@ -170,20 +171,27 @@ module RubyReportable
       end
     end
 
+    def _convert_for_sort(value)
+      case value.class
+      when NilClass
+        value.to_s
+      when Date, DateTime, Time
+        value
+      when Array
+        value.map {|sub| _convert_for_sort(sub)}
+      else
+        value.to_s
+      end
+    end
+
     def _sort(sort, data, options = {})
       if sort.to_s.empty?
         data
       else
         sort = [sort] unless sort.is_a?(Array)
 
-        #data.sort_by {|element| sort.map {|column| element[column]} }
-        sort.map.each do |element|
-          parts = data.partition { |d| d[element].blank? }
-          sorted = parts.last.sort { |a,b| a[element] <=> b[element] }
-          data = sorted + parts.first
-        end
+        data.sort_by {|element| sort.map {|column| _convert_for_sort(element[column]) }}
       end
-      return data
     end
 
     def _group(group, data, options = {})
