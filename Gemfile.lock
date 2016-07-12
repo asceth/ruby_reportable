@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    ruby_reportable (0.4.2)
+    ruby_reportable (0.4.3)
 
 GEM
   remote: https://rubygems.org/
@@ -24,3 +24,6 @@ DEPENDENCIES
   rr
   rspec
   ruby_reportable!
+
+BUNDLED WITH
+   1.12.5
