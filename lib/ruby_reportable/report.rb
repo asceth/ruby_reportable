@@ -155,7 +155,7 @@ module RubyReportable
 
     def _output(source_data, options = {})
       # build sandbox for building outputs
-      sandbox = RubyReportable::Sandbox.new(:meta => @meta, @data_source[:as] => nil)
+      sandbox = RubyReportable::Sandbox.new(:meta => @meta, :inputs => options[:input] || {}, @data_source[:as] => nil)
 
       source_data.inject([]) do |rows, element|
         # fill sandbox with data element
