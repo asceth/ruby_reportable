@@ -310,8 +310,8 @@ module RubyReportable
             true
           end
         elsif !filter_validity.nil? && !filter_validity[:status].nil? && filter_validity[:status] == false
-          # Ignore an empty filter unless it's required
-          if !sandbox[:input].to_s.blank? || filter_validity[:force_require] == true
+          # Ignore an empty filter unless it's required or the error is forced.
+          if !sandbox[:input].to_s.blank? || filter_validity[:force_error] == true
             errors << filter_validity[:errors]
             false
           else
